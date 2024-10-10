@@ -32,7 +32,7 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
             .AddScreen("Add Console", AddConsole)
             .AddScreen("Search Console", [])
             .Done()
-        .AddScreen("Search Item", [])s
+        .AddScreen("Search Item", [])
         .AddScreen("Add Item", [])
         .Done()
     .AddMenu("Rentals")
