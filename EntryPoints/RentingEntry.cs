@@ -34,8 +34,8 @@ public class RentingEntry
         {
             var customer = _customerEntry.ChooseCustomer();
 
-            if (customer is null)
-                return;
+            // if (customer is null)
+            //     return;
 
             HashSet<Copy> copies = new(); //we dont want to rent the same two times at once
             MenuBuilder.CreateMenu("Add items to be rented")
@@ -47,17 +47,11 @@ public class RentingEntry
                 .AddQuit("Continue")
                 .Enter();
 
-            void PrintAddedCopies()
-            {
-                if (copies.Count > 0)
-                {
-                    Console.WriteLine("Copies added so far: " + string.Join("\n", copies));
-                }
-                else
-                {
-                    Console.WriteLine("No copies added yet.");
-                }
-            }
+            void PrintAddedCopies() => 
+                Console.WriteLine(
+                    copies.Count > 0
+                        ? "Copies added so far: " + string.Join("\n", copies)
+                        : "No copies added yet.");
 
             List<int> rentTimes = new();
             foreach (var copy in copies)
@@ -75,7 +69,6 @@ public class RentingEntry
                 copies.Select(c => c.Id).ToList(),
                 rentTimes
             );
-
 
             Console.WriteLine(RentalReceiptString(rental));
 

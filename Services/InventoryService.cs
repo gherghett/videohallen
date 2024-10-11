@@ -12,18 +12,6 @@ public class InventoryService
         _dbContext = context;
     }
 
-    // Movie methods
-    public Movie AddMovie(string title, DateOnly release, List<MovieGenre> genres)
-    {
-        Movie newMovie = new Movie
-        {
-            Title = title,
-            ReleaseDate = release,
-            Genres = genres
-        };
-        return AddMovie(newMovie);
-    }
-
     public Movie AddMovie(Movie movie, int copies = 1)
     {
         _dbContext.Add(movie);
@@ -32,9 +20,24 @@ public class InventoryService
         return movie;
     }
 
-    public Movie? GetMovie(int id)
+    internal List<Movie> GetAllMovies()
     {
-        return _dbContext.Movies.Include(m => m.Genres).FirstOrDefault(m => m.Id == id);
+        return _dbContext.Movies.Include(r => r.Copies).ToList();
+    }
+
+    // MovieGenre methods
+    public MovieGenre AddGenre(string name)
+    {
+        var genre = new MovieGenre{
+            Name = name,
+        };
+        _dbContext.Add(genre);
+        _dbContext.SaveChanges();
+        return genre;
+    }
+    public List<MovieGenre> GetAllMovieGenres()
+    {
+        return _dbContext.MovieGenres.ToList();
     }
 
     // Game methods
@@ -51,9 +54,16 @@ public class InventoryService
         return newGame;
     }
 
-    public Game? GetGame(int id)
+    public GamePublisher AddPublisher(string name)
     {
-        return _dbContext.Games.Include(g => g.Publisher).FirstOrDefault(g => g.Id == id);
+        var publisher = new GamePublisher{Name = name};
+        _dbContext.Add(publisher);
+        _dbContext.SaveChanges();
+        return publisher;
+    }
+    public List<GamePublisher> GetAllGamePublishers()
+    {
+        return _dbContext.GamePublishers.ToList();
     }
 
     // RentConsole methods
@@ -65,16 +75,6 @@ public class InventoryService
         return newConsole;
     }
 
-    public RentConsole? GetRentConsole(int id)
-    {
-        return _dbContext.RentConsoles.Find(id);
-    }
-
-    // Copy methods
-    public List<Copy> GetAllCopies()
-    {
-        return _dbContext.Copies.Include(c => c.Rentable).ToList();
-    }
     public List<Copy> AddCopies(Rentable rentable, int amount = 1)
     {
         List<Copy> copies = new();
@@ -88,25 +88,9 @@ public class InventoryService
         return copies;
     }
 
-    // MovieGenre methods
-    public List<MovieGenre> GetAllMovieGenres()
-    {
-        return _dbContext.MovieGenres.ToList();
-    }
-
-
-    internal List<GamePublisher> GetAllGamePublishers()
-    {
-        return _dbContext.GamePublishers.ToList();
-    }
     public List<Rentable> GetAllInventory()
     {
         return _dbContext.Rentables.Include(r => r.Copies).ToList();
-    }
-
-    internal List<Movie> GetAllMovies()
-    {
-        return _dbContext.Movies.Include(r => r.Copies).ToList();
     }
 
     internal List<Game> GetAllGames()
@@ -130,11 +114,7 @@ public class InventoryService
         return rentable.Copies.Count(c => !c.Out);
     }
 
-    public bool GetCopyAvailability(int copyId)
-    {
-        return _dbContext.Copies.Where(c=> c.Id == copyId && !c.Out).Any();
-    }
-
+    //Search
     public List<Rentable> SearchAllInventory(string query)
     {
         var movies = SearchMovies(query);
@@ -182,23 +162,5 @@ public class InventoryService
             throw new CopyNotAvailableException("There is no available copies for this rentable");
         
         return availableCopy;
-    }
-
-    public MovieGenre AddGenre(string name)
-    {
-        var genre = new MovieGenre{
-            Name = name,
-        };
-        _dbContext.Add(genre);
-        _dbContext.SaveChanges();
-        return genre;
-    }
-
-    public GamePublisher AddPublisher(string name)
-    {
-        var publisher = new GamePublisher{Name = name};
-        _dbContext.Add(publisher);
-        _dbContext.SaveChanges();
-        return publisher;
     }
 }

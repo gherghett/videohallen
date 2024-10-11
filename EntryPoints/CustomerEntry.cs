@@ -46,7 +46,7 @@ public class CustomerEntry
         }
     }
 
-    public Customer? ChooseCustomer()
+    public Customer ChooseCustomer()
     {
         List<Customer> customers = new();
         MenuBuilder.CreateMenu("Find Customer")
