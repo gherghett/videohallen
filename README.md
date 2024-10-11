@@ -62,30 +62,30 @@ Gävles bästa videobutik
 
 ## Funktionskrav
 
-- [ ] Registrera ny medlem (innehållande medlemsnummer, namn och telefonnummer)
+- [x] Registrera ny medlem (innehållande medlemsnummer, namn och telefonnummer)
     * Medlem: Id, name, phone
-- [ ] Hämta ut en lista över alla medlemmar
-- [ ] Registrera ny film / tv-spel / konsol
+- [x] Hämta ut en lista över alla medlemmar
+- [x] Registrera ny film / tv-spel / konsol
     * Film: Id, Title, Genre, Releasedate
     * Tv-spel: Id, Title, ReleaseDate samt Publisher
     * Konsol: Id, Model
 - [ ] Söka bland hyrbara saker utifrån en söksträng (ex titel)
-- [ ] Låna ut saker till en medlem
+- [x] Låna ut saker till en medlem
 - [ ] Återlämningsdatum skrivs ut när något lånas
 - [ ] Slutgiltigt pris skrivs ut vid utlåning
 - [ ] Lista allt som är uthyrt
 - [ ] Lista allt som är tillgängligt för uthyrning
 - [ ] Återlämna uthyrda saker
 - [ ] Markera media som skadad/saknad vid återlämning
-- [ ] Skriva ut information om media eller utlån med hjälp av en egen override av ToString()-metoden
+- [x] Skriva ut information om media eller utlån med hjälp av en egen override av ToString()-metoden
 - [ ] När programmet startar ska minst 5 media av olika typer finnas i biblioteket, samt två medlemmar, så att det snabbt går att testa.
-- [ ] Programmet skall hantera felaktig inmatning så att det inte kan krascha på grund av användarfel
-- [ ] Programmet skall kunna ladda och spara information om medlemmar, utlån och hyrbara saker som exempelvis json-data eller något liknande. Beroende på hur dina klasser är strukturerade kan detta vara allt ifrån lätt till svårt.
+- [x] Programmet skall hantera felaktig inmatning så att det inte kan krascha på grund av användarfel
+- [x] Programmet skall kunna ladda och spara information om medlemmar, utlån och hyrbara saker som exempelvis json-data eller något liknande. Beroende på hur dina klasser är strukturerade kan detta vara allt ifrån lätt till svårt.
 - [ ] Reservation! Det skall gå att reservera något som redan är uthyrt, så att det inte går att hyra ut till någon annan dygnet efter det har blivit tillbakalämnat.
 
 ## Regler
 
-- [ ] Det skall inte gå att hyra något som redan är uthyrt
+- [x] Det skall inte gå att hyra något som redan är uthyrt
 - [ ] Priset för utlåning är 29:- per dygn för filmer och spel, 99:- för konsoler.
 - [ ] Uthyrningar har en max utlåningstid på tre dygn för film och spel.
 - [ ] Konsoler kan också hyras veckovis, och kostar då 349:-

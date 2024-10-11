@@ -13,13 +13,14 @@ public class VideoHallDbContext : DbContext
     public DbSet<Copy> Copies { get; set; }
     public DbSet<Rental> Rentals { get; set; }
     public DbSet<Return> Returns { get; set; }
+    public DbSet<Fine> Fines {get; set;}
 
     public DbSet<GamePublisher> GamePublishers { get; set; }
     public DbSet<MovieGenre> MovieGenres { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    public VideoHallDbContext(DbContextOptions<VideoHallDbContext> options)
+        : base(options)
     {
-        optionsBuilder.UseSqlite("Data Source=VideoHall.db");
     }
 
     // protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -89,5 +90,20 @@ public class VideoHallDbContext : DbContext
             returns.HasMany(r => r.ReturnedCopies)
                 .WithMany(rentable => rentable.Returns);
         });
+
+        modelBuilder.Entity<Fine>()
+            .HasOne(f => f.Return)
+            .WithMany()
+            .HasForeignKey(f => f.ReturnId);
+
+        modelBuilder.Entity<Fine>()
+            .HasOne(f => f.Customer)
+            .WithMany()
+            .HasForeignKey(f => f.CustomerId);
+        
+        modelBuilder.Entity<Fine>()
+            .HasOne(f => f.Copy)
+            .WithMany()
+            .HasForeignKey(f => f.CopyId);
     }
 }

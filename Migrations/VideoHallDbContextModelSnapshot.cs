@@ -68,7 +68,16 @@ namespace videohallen_gherghett.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Damaged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Out")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("RentableId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Unusable")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -88,9 +97,42 @@ namespace videohallen_gherghett.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Telephone")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("VideoHallen.Models.Fine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CopyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReturnId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CopyId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ReturnId");
+
+                    b.ToTable("Fines");
                 });
 
             modelBuilder.Entity("VideoHallen.Models.GamePublisher", b =>
@@ -154,6 +196,14 @@ namespace videohallen_gherghett.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("RentalPrices")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RentalTimes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("TEXT");
@@ -291,6 +341,33 @@ namespace videohallen_gherghett.Migrations
                         .IsRequired();
 
                     b.Navigation("Rentable");
+                });
+
+            modelBuilder.Entity("VideoHallen.Models.Fine", b =>
+                {
+                    b.HasOne("VideoHallen.Models.Copy", "Copy")
+                        .WithMany()
+                        .HasForeignKey("CopyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoHallen.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoHallen.Models.Return", "Return")
+                        .WithMany()
+                        .HasForeignKey("ReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Copy");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Return");
                 });
 
             modelBuilder.Entity("VideoHallen.Models.Rental", b =>

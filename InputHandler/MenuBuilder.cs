@@ -1,10 +1,14 @@
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
 namespace InputHandler;
 
 public abstract class MenuItem
 {
     public string Title {get; init;} = null!;
+    protected Action? _onEnter = Console.WriteLine;
     protected MenuBuilder? _father = null;
     public abstract void Enter();
+
 }
 
 public class MenuBuilder : MenuItem
@@ -45,9 +49,19 @@ public class MenuBuilder : MenuItem
 
     public MenuBuilder AddQuit(string title) =>
         this.AddScreen(title, [], false);
+    
+    public MenuBuilder AddQuit(string title, Action lastly) =>
+        this.AddScreen(title, [lastly], false);
+
+    public MenuBuilder OnEnter(Action onEnter){
+        _onEnter = onEnter;
+        return this;
+    }
 
     public override void Enter()
     {
+        _onEnter?.Invoke();
+
         var options = _children.Select( c => (c.Title, (Action)c.Enter)).ToList();
         if(_father is not null)
         {
@@ -60,7 +74,7 @@ public class MenuBuilder : MenuItem
 
 public class Screen : MenuItem
 {
-    private List<Action> _toDos = new List<Action>{Console.WriteLine};
+    private List<Action> _toDos = new List<Action>();
     private bool _goBack = true; 
     public Screen(MenuBuilder father, string title, Action action)
     {
@@ -79,11 +93,11 @@ public class Screen : MenuItem
     
     public override void Enter()
     {
+        _onEnter?.Invoke();
         List<Action> toDos;
         if(_goBack)
         {
             toDos = _toDos
-                .Append(Console.WriteLine)
                 .Append(_father!.Enter).ToList();
         }
         else

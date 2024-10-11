@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace videohallen_gherghett.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Fines : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,8 @@ namespace videohallen_gherghett.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Telephone = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -57,7 +58,10 @@ namespace videohallen_gherghett.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeStamp = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    TimeStamp = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RentalTimes = table.Column<string>(type: "TEXT", nullable: false),
+                    RentalPrices = table.Column<string>(type: "TEXT", nullable: false),
+                    Complete = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -121,7 +125,10 @@ namespace videohallen_gherghett.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    RentableId = table.Column<int>(type: "INTEGER", nullable: false)
+                    RentableId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Damaged = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Unusable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Out = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -206,6 +213,39 @@ namespace videohallen_gherghett.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Fines",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ReturnId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CopyId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Fines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Fines_Copies_CopyId",
+                        column: x => x.CopyId,
+                        principalTable: "Copies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Fines_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Fines_Returns_ReturnId",
+                        column: x => x.ReturnId,
+                        principalTable: "Returns",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Copies_RentableId",
                 table: "Copies",
@@ -220,6 +260,21 @@ namespace videohallen_gherghett.Migrations
                 name: "IX_CopyReturn_ReturnsId",
                 table: "CopyReturn",
                 column: "ReturnsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Fines_CopyId",
+                table: "Fines",
+                column: "CopyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Fines_CustomerId",
+                table: "Fines",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Fines_ReturnId",
+                table: "Fines",
+                column: "ReturnId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MovieMovieGenre_MoviesId",
@@ -250,6 +305,9 @@ namespace videohallen_gherghett.Migrations
 
             migrationBuilder.DropTable(
                 name: "CopyReturn");
+
+            migrationBuilder.DropTable(
+                name: "Fines");
 
             migrationBuilder.DropTable(
                 name: "MovieMovieGenre");

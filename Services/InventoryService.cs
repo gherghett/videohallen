@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VideoHallen;
 using VideoHallen.Models;
+using VideoHallen.Exceptions;
 
 namespace VideoHallen.Services;
 public class InventoryService 
@@ -129,6 +130,60 @@ public class InventoryService
         return rentable.Copies.Count(c => !c.Out);
     }
 
+    public bool GetCopyAvailability(int copyId)
+    {
+        return _dbContext.Copies.Where(c=> c.Id == copyId && !c.Out).Any();
+    }
+
+    public List<Rentable> SearchAllInventory(string query)
+    {
+        var movies = SearchMovies(query);
+        var games = SearchGames(query);
+        var consoles = SearchRentConsoles(query);
+        
+        return movies.Cast<Rentable>()
+                 .Concat(games.Cast<Rentable>())
+                 .Concat(consoles.Cast<Rentable>())
+                 .ToList();
+    }
+    public List<Movie> SearchMovies(string query)
+    {
+        return _dbContext.Movies.Where(c => EF.Functions.Like(c.Title, $"%{query}%")).ToList();
+    }
+    public List<Game> SearchGames(string query)
+    {
+        return _dbContext.Games.Where(c => EF.Functions.Like(c.Title, $"%{query}%")).ToList();
+    }
+    public List<RentConsole> SearchRentConsoles(string query)
+    {
+        return _dbContext.RentConsoles.Where(c => EF.Functions.Like(c.Model, $"%{query}%")).ToList();
+    }
+    
+    public List<Copy> GetCopiesOfRentable(Rentable rentable)
+    {
+        var loadedRentable = _dbContext.Rentables
+        .Include(r => r.Copies)
+        .Where(r => r.Id == rentable.Id)
+        .SingleOrDefault();
+
+        if(loadedRentable is null)
+            throw new RentalNotFoundException("Rentable could not be found in db");
+
+        return loadedRentable
+            .Copies
+            .ToList();
+    }
+    public Copy GetAvailableCopy(Rentable rentable)
+    {
+        var availableCopy = GetCopiesOfRentable(rentable)
+            .Where(c => !c.Out).FirstOrDefault();
+
+        if(availableCopy is null)
+            throw new CopyNotAvailableException("There is no available copies for this rentable");
+        
+        return availableCopy;
+    }
+
     public MovieGenre AddGenre(string name)
     {
         var genre = new MovieGenre{
@@ -137,5 +192,13 @@ public class InventoryService
         _dbContext.Add(genre);
         _dbContext.SaveChanges();
         return genre;
+    }
+
+    public GamePublisher AddPublisher(string name)
+    {
+        var publisher = new GamePublisher{Name = name};
+        _dbContext.Add(publisher);
+        _dbContext.SaveChanges();
+        return publisher;
     }
 }

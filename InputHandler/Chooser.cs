@@ -12,12 +12,12 @@ static class Chooser
     public static T ChooseAlternative<T>(string message, (string message, T option)[] options)
     {
         int selectionIndex = 0;
-        int linesToRedraw = options.Length + 2; // One line for each option and one for the prompt.
+        int linesToRedraw = options.Length + 1; // One line for each option and one for the prompt.
         ConsoleKeyInfo output;
 
         while (true)
         {
-            Console.WriteLine();
+            //Console.WriteLine();
             Console.WriteLine(message);
             for (int i = 0; i < options.Length; i++)
             {
@@ -89,4 +89,51 @@ static class Chooser
     /// <returns>A char corresponding to the option</returns>
     public static int ChooseAlternative(string message, (string message, int option)[] options) => 
         ChooseAlternative(message, options);
+
+    
+    public static List<T> ChooseMultiple<T>(string message, (string message, T option)[] options)
+    {
+        int selectionIndex = 0;
+        int linesToRedraw = options.Length + 2; // One line for each option and one for the prompt, and one for instructions
+        ConsoleKeyInfo output;
+
+        var results = new List<T>();
+
+        while (true)
+        {
+            //Console.WriteLine();
+            Console.WriteLine(message);
+            Console.WriteLine("Use SPACE to mark options, ENTER to continue.");
+            for (int i = 0; i < options.Length; i++)
+            {
+                Console.WriteLine( $"{(i == selectionIndex ? '>' : ' ')} { 
+                    (results.Contains(options[i].option) ? 'x' : ' ')} { 
+                    options[i].message}");
+            }
+
+            output = Console.ReadKey(true);
+            if (output.Key == ConsoleKey.UpArrow)
+            {
+                selectionIndex = (selectionIndex + options.Length - 1) % options.Length;
+            }
+            else if (output.Key == ConsoleKey.DownArrow)
+            {
+                selectionIndex = (selectionIndex + 1) % options.Length;
+            }
+            else if (output.Key == ConsoleKey.Spacebar)
+            {
+                var option = options[selectionIndex].option;
+                if(results.Contains(option))
+                    results.Remove(option);
+                else
+                    results.Add(option);
+            }
+            else if (output.Key == ConsoleKey.Enter)
+            {
+                return results;
+            }
+
+            Console.SetCursorPosition(0, Console.CursorTop - linesToRedraw);
+        }
+    }
 }
