@@ -38,26 +38,39 @@ Gävles bästa videobutik
 
 ### För G krävs följande i inlämningen:
 
-- [ ] Minst 11 av 16 funktionskrav måste vara uppfyllda (**se listan nedan**).
-- [ ] 3 av 10 regler bör vara implementerade
-- [ ] Du har kryssat i alla checkboxar i denna readmefil som du anser att du har gjort. Kryssa så här-> [x]
-- [ ] Du har skapat en körbar konsolapplikation i C# ( lösningen kommer att testas i VS Code. )
-- [ ] Du har enskilt planerat och skapat en enkel men välstrukturerad applikation med hjälp av språket C#.
-- [ ] Du använder dig av objektorientering i ditt system.
-- [ ] Du har besvarat följande två frågor (Svara på dem här i Readme-filen, direkt under frågan): 
+- [x] Minst 11 av 16 funktionskrav måste vara uppfyllda (**se listan nedan**).
+- [x] 3 av 10 regler bör vara implementerade
+- [x] Du har kryssat i alla checkboxar i denna readmefil som du anser att du har gjort. Kryssa så här-> [x]
+- [x] Du har skapat en körbar konsolapplikation i C# ( lösningen kommer att testas i VS Code. )
+- [x] Du har enskilt planerat och skapat en enkel men välstrukturerad applikation med hjälp av språket C#.
+- [x] Du använder dig av objektorientering i ditt system.
+- [x] Du har besvarat följande två frågor (Svara på dem här i Readme-filen, direkt under frågan): 
 * Hur tycker du att du lyckats med uppgiften?
+
+Jag tycker jag lyckats bra... Applikationen är inte "komplett", dvs den hade inte varit användbar i praktiken, eftersom man inte kan tex ta bort kunder eller ändra kunders information, betala av böter, osv. Jag tog projektbeskrivningen som att fokus var på att hitta eleganta lösningar över att implementera komplett CRUD-funktionalitet, och i mina lösnigar är tydliga mönster etablerade som kan återanvändas för de operationer som fattas. 
+
+Applikationen är i breda drag uppdelade i `Entry` klasserna som innehåller Metoder som ber om input och använder den information för att kalla på `Service` klasserna, som skapar och ändrar på modellerna som representerar applikationens State och även kommunicerar med Databasen. Det finns en tydlig separation of concerns, även om service-lagret som är kombinerat med repo-lagret, är ganska brett. `Entry`-klasserna är det lager som ligger mellan de statiska Console Metoderna (`UI`-mappen) och vår business logic (`Services`-mappen).
+
+Jag är stolt över menusystemet som jag tyckte blev fiffigt `MenuBuilder`. Planeringen började med databasen som skapades code-first med Entity Framework.
 
 * Vad var svårast?
 
+Att sätta stop för abstraktionen, att göra en `Rentable` till representationen av en utgåva, och en `Copy`till en faktiskt kopia av en sådan utgåva, lade till mkt komplexitet till exempel.
+
 ### För VG krävs utöver samtliga G-krav också följande:
 
-- [ ] 15 av 16 funktionskrav måste vara uppfyllda (**se listan nedan**).
-- [ ] 8 av 10 regler bör vara implementerade
-- [ ] Din struktur skapar förutsättningar för effektivt underhåll och möjlighet till vidareutveckling, dvs det är extra viktigt att skilja på gränssnittskod och applikationsbunden logik.
-- [ ] Din kod är prydlig, konsekvent samt använder sig av bra namngivning.
-- [ ] Svara på dessa två frågor: 
+- [x] 15 av 16 funktionskrav måste vara uppfyllda (**se listan nedan**).
+- [x] 8 av 10 regler bör vara implementerade
+- [x] Din struktur skapar förutsättningar för effektivt underhåll och möjlighet till vidareutveckling, dvs det är extra viktigt att skilja på gränssnittskod och applikationsbunden logik.
+- [x] Din kod är prydlig, konsekvent samt använder sig av bra namngivning.
+- [x] Svara på dessa två frågor: 
 * På vilket sätt underlättar din nuvarande struktur vidareutveckling? Ge gärna exempel om du skulle lägga till någon extra funktion.
+Menu-erna skapas på ett sätt som gör det lätt att lägga till alternativ, om man tittar på huvudmenun i Program.cs ser man direkt hur man skulle kunna lägga till en ytterligare "entry" till applikationen. `Service` klasserna har metoder som gör att ny funktionalitet kan läggas till i en `Entry`-klass. Tex metodern `GetRentables()` som kan användas för att få tillbaka en lista med `Rentable` objekt från databasen skulle kunna ändras för att tillåta uteslutning av `Rentable`s som är reserverade.
+
 * Givet mer tid, vad skulle du kunna gjort bättre i denna uppgift? 
+Regler som böter, rabatter och priser är alldeles för inbakta i koden, som magiska siffor.
+Det skrivs ut en oregelbunden mängd radbrytningar i menu-systemet.
+EFCore är jag inte så bekant med och bara i slutet började jag förstå mig vad en Queryable är.
 
 ---
 
@@ -79,7 +92,7 @@ Gävles bästa videobutik
 - [x] Återlämna uthyrda saker
 - [x] Markera media som skadad/saknad vid återlämning
 - [x] Skriva ut information om media eller utlån med hjälp av en egen override av ToString()-metoden
-- [ ] När programmet startar ska minst 5 media av olika typer finnas i biblioteket, samt två medlemmar, så att det snabbt går att testa.
+- [x] När programmet startar ska minst 5 media av olika typer finnas i biblioteket, samt två medlemmar, så att det snabbt går att testa.
 - [x] Programmet skall hantera felaktig inmatning så att det inte kan krascha på grund av användarfel
 - [x] Programmet skall kunna ladda och spara information om medlemmar, utlån och hyrbara saker som exempelvis json-data eller något liknande. Beroende på hur dina klasser är strukturerade kan detta vara allt ifrån lätt till svårt.
 - [ ] Reservation! Det skall gå att reservera något som redan är uthyrt, så att det inte går att hyra ut till någon annan dygnet efter det har blivit tillbakalämnat.
