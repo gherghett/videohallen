@@ -105,6 +105,30 @@ public class RentingEntry
         }
     }
 
+    private Rental ChooseRental()
+    {
+        List<Rental> rentals = new();
+        MenuBuilder.CreateMenu("Choose Rental")
+            .AddQuit("Rental by customer", () =>
+            {
+                rentals = _rentingService.GetRentalByCustomer(_customerEntry.ChooseCustomer());
+            })
+            .AddQuit("Pick from all", () =>
+            {
+                rentals = _rentingService.GetAllRentals();
+            })
+            .Enter();
+
+
+        // No customer 
+        if (rentals.Count < 1)
+        {
+            throw new VideoArgumentException("There are no rentals to choose from");
+        }
+
+        return Chooser.ChooseAlternative<Rental>("Choose rental", rentals.Select(r => (r.ToString(), r)).ToArray());
+    }
+
     public void NewReturn()
     {
         try
@@ -150,32 +174,7 @@ public class RentingEntry
 
     }
 
-
-    private Rental ChooseRental()
-    {
-        List<Rental> rentals = new();
-        MenuBuilder.CreateMenu("Choose Rental")
-            .AddQuit("Rental by customer", () =>
-            {
-                rentals = _rentingService.GetRentalByCustomer(_customerEntry.ChooseCustomer());
-            })
-            .AddQuit("Pick from all", () =>
-            {
-                rentals = _rentingService.GetAllRentals();
-            })
-            .Enter();
-
-
-        // No customer 
-        if (rentals.Count < 1)
-        {
-            throw new VideoArgumentException("There are no rentals to choose from");
-        }
-
-        return Chooser.ChooseAlternative<Rental>("Choose rental", rentals.Select(r => (r.ToString(), r)).ToArray());
-    }
-
-    public string RentalReceiptString(Rental rental)
+    private string RentalReceiptString(Rental rental)
     {
         var loadedRental = _rentingService.GetRental(rental.Id);
         if (loadedRental == null)

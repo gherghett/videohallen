@@ -107,7 +107,7 @@ Man kan för tillfället hyra en borttappad `Rentable`
 - [x] Uthyrningar har en max utlåningstid på tre dygn för film och spel.
 - [x] Konsoler kan också hyras veckovis, och kostar då 349:-
 - [x] Om återlämningen är försenat skall en bötesavgift läggas till medlemmen (10kr per dag)
-- [x] Om uthyrd sak är skadad skall 500:- läggas till medlemmens böter //just nu kan både försvunnit  och skadat läggas till
+- [x] Om uthyrd sak är skadad skall 500:- läggas till medlemmens böter 
 - [x] Om uthyrd sak har försvunnit skall 1000:- läggas till medlemmens böter
 - [x] Lån skall inte gå att göra om medlemmen har obetalda böter
 - [x] Stammisrabatt: Om kunden varit medlem längre än ett år skall den alltid få 10% rabatt
