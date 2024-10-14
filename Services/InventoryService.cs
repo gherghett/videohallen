@@ -13,7 +13,7 @@ public class InventoryService
         _dbContext = context;
         _rentingService = rentingService;
     }
-
+    //Movie Methods
     public Movie AddMovie(Movie movie, int copies = 1)
     {
         _dbContext.Add(movie);
@@ -73,6 +73,7 @@ public class InventoryService
         return newConsole;
     }
 
+    //Copies and Rentable Methods
     public List<Copy> AddCopies(Rentable rentable, int amount = 1)
     {
         List<Copy> copies = new();
@@ -115,7 +116,8 @@ public class InventoryService
         return results.Where(r => r.Name().Contains(search, StringComparison.OrdinalIgnoreCase)).Distinct().ToList();
     }
 
-    public int GetAvailableCopies(Rentable rentable)
+    // Returns the amount of available (not the rented) copies for a Rentable
+    public int GetAvailabilityOfRentable(Rentable rentable)
     {
         _dbContext.Entry(rentable).Collection(r => r.Copies).Load();
         return rentable.Copies.Count(c => !c.Out);
@@ -138,6 +140,7 @@ public class InventoryService
     public Copy GetCopy(int copyId) =>
          _dbContext.Copies.Find(copyId)
             ?? throw new VideoArgumentException("Cant find copy!");
+    // Returns one available copy of a Rentable
     public Copy GetAvailableCopy(Rentable rentable)
     {
         var availableCopy = GetCopiesOfRentable(rentable)
@@ -148,7 +151,7 @@ public class InventoryService
         
         return availableCopy;
     }
-    public Rentable GetRentableOfCopy(int copyId) //TODO remove?
+    public Rentable GetRentableOfCopy(int copyId) 
     {
         var rentable = _dbContext.Rentables.Where(r => r.Copies.Any( c => c.Id == copyId)).SingleOrDefault();
         if (rentable is null)
@@ -156,14 +159,14 @@ public class InventoryService
         return rentable;
     } 
 
-    public void Destroyed(RentedCopy rc)
+    public void SetDestroyed(RentedCopy rc)
     {
         GetCopy(rc.CopyId).Unusable = true;
         _rentingService.CreateFine(rc, 500m, "Damage");        
         _dbContext.SaveChanges();
     }
 
-    public void Damaged(RentedCopy rc)
+    public void SetDamaged(RentedCopy rc)
     {
         GetCopy(rc.CopyId).Damaged = true;
         _rentingService.CreateFine(rc, 1000m, "Destroyed");        

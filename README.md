@@ -72,6 +72,8 @@ Regler som böter, rabatter och priser är alldeles för inbakta i koden, som ma
 Det skrivs ut en oregelbunden mängd radbrytningar i menu-systemet.
 EFCore är jag inte så bekant med och bara i slutet började jag förstå mig vad en Queryable är.
 Det är svårt att testa funktionaliteten som har med datum att göra.
+Man kan inte se genrerna, och inga fält inkluderas i en sökning förutom titeln.
+Man kan för tillfället hyra en borttappad `Rentable`
 
 ---
 

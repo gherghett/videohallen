@@ -129,8 +129,8 @@ public class RentingEntry
             var options = returnResult.Select(rc => (rc.Copy.ToString(), rc)).ToArray();
             var damaged = Chooser.ChooseMultiple<RentedCopy>("Was anything damaged (not destroyed)?", options);
             var destroyed = Chooser.ChooseMultiple<RentedCopy>("Was anything Destroyed?", options);
-            damaged.ForEach(d => _inventoryService.Damaged(d));
-            destroyed.ForEach(d => _inventoryService.Destroyed(d));
+            damaged.ForEach(d => _inventoryService.SetDamaged(d));
+            destroyed.ForEach(d => _inventoryService.SetDestroyed(d));
 
             // show fines for customer
             var fines = _customerService.GetFinesForCustomer(rental.CustomerId);

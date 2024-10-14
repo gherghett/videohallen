@@ -120,12 +120,11 @@ public class InventoryEntry
             ErrorHandler.HandleException(ex);
         }
     }
-
     public void Search()
     {
         try
         {
-            //MAke user choose what to search for
+            // Make user choose what types to search for
             var names = Enum.GetNames(typeof(RentableFlag)).ToList();
             var flags = Enum.GetValues<RentableFlag>().ToList();
             RentableFlag searchFlags;
@@ -155,7 +154,7 @@ public class InventoryEntry
     public Copy ChooseCopy() => _inventoryService.GetAvailableCopy(ChooseRentable());
 
     private void PrintRentables<T>(List<T> rentables) where T : Rentable =>
-        Console.WriteLine(string.Join("\n", rentables.Select(i => i.ToString() + "avail cps: " + _inventoryService.GetAvailableCopies(i))));
+        Console.WriteLine(string.Join("\n", rentables.Select(i => i.ToString() + "avail cps: " + _inventoryService.GetAvailabilityOfRentable(i))));
 
     public Rentable ChooseRentable()
     {
@@ -182,7 +181,7 @@ public class InventoryEntry
         return Chooser.ChooseAlternative<Rentable>(
             "Pick rentable from results", 
             rentables.Select(r => 
-                (r.ToString()+"avail: "+_inventoryService.GetAvailableCopies(r), r)).ToArray()
+                (r.ToString()+"avail: "+_inventoryService.GetAvailabilityOfRentable(r), r)).ToArray()
         );
     }
 
