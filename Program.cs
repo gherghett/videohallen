@@ -13,6 +13,7 @@ var customerEntry = serviceProvider.GetRequiredService<CustomerEntry>();
 var inventoryEntry = serviceProvider.GetRequiredService<InventoryEntry>();
 var rentingEntry = serviceProvider.GetRequiredService<RentingEntry>();
 
+// DummyData.AddTestingData(serviceProvider);
 
 var menu = MenuBuilder.CreateMenu("Main Menu")
     .AddMenu("Customers")
@@ -21,6 +22,8 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
         .Done()
     .AddMenu("Inventory")
         .AddScreen("View All Inventory", () => inventoryEntry.ViewInventory())
+        .AddScreen("View available to rent", () => inventoryEntry.ViewInventory(RentableType.All, RentableFlag.In))
+        .AddScreen("View whats rented", () => inventoryEntry.ViewInventory(RentableType.All, RentableFlag.Out))
         .AddMenu("Movies")
             .AddScreen("View All Movies", () => inventoryEntry.ViewInventory(RentableType.Movie))
             .AddScreen("Add Movie", inventoryEntry.AddMovie)
@@ -45,7 +48,6 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
         .Done()
     .AddQuit("Quit");
 
-// DummyData.AddTestingData(serviceProvider);
 menu.Enter();
 
 static ServiceProvider ConfigureServices()

@@ -43,7 +43,9 @@ public class InventoryEntry
         {
             var genres = new HashSet<MovieGenre>(); //only one of each
             var allGenres = _inventoryService.GetAllMovieGenres();
-            var choosingGenresMenu = MenuBuilder.CreateMenu("Choose genres")
+            var choosingGenresMenu = MenuBuilder
+            .CreateMenu("Choose genres")
+                .OnEnter( () => Console.WriteLine("Genres added so far: "+string.Join(", ", genres)))
                 .AddScreen("Add Genre", () =>
                 {
                     genres.Add(
@@ -51,16 +53,20 @@ public class InventoryEntry
                         allGenres.Select(g => (g.Name, g)).ToArray())
                     );
                 })
-                .AddQuit("Done.");
-
-            string title = UserGet.GetString("Input Title");
+                .AddQuit("Continue", () => Console.WriteLine("Genres added: "+string.Join(", ", genres)));
             choosingGenresMenu.Enter();
+
             var movie = new Movie
             {
-                Title = title,
-                Genres = genres.ToList()
+                Title = UserGet.GetString("Input Title"),
+                Genres = genres.ToList(),
+                ReleaseDate = UserGet.GetDateOnly("Release Date")
             };
+
             int copies = UserGet.GetInt("How many copies?");
+            if (copies < 0)
+                throw new VideoArgumentException("Cant add a negative amount of copies.");
+                
             _inventoryService.AddMovie(movie, copies);
             Console.WriteLine(movie);
         }

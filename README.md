@@ -51,11 +51,11 @@ Jag tycker jag lyckats bra... Applikationen är inte "komplett", dvs den hade in
 
 Applikationen är i breda drag uppdelade i `Entry` klasserna som innehåller Metoder som ber om input och använder den information för att kalla på `Service` klasserna, som skapar och ändrar på modellerna som representerar applikationens State och även kommunicerar med Databasen. Det finns en tydlig separation of concerns, även om service-lagret som är kombinerat med repo-lagret, är ganska brett. `Entry`-klasserna är det lager som ligger mellan de statiska Console Metoderna (`UI`-mappen) och vår business logic (`Services`-mappen).
 
-Jag är stolt över menusystemet som jag tyckte blev fiffigt `MenuBuilder`. Planeringen började med databasen som skapades code-first med Entity Framework.
+Jag är stolt över menusystemet som jag tyckte blev fiffigt `MenuBuilder`. Planeringen började med databasen som skapades code-first med Entity Framework. Jag fösökte att inte fokusera på användarvänligheten.
 
 * Vad var svårast?
 
-Att sätta stop för abstraktionen, att göra en `Rentable` till representationen av en utgåva, och en `Copy`till en faktiskt kopia av en sådan utgåva, lade till mkt komplexitet till exempel.
+Att sätta stop för abstraktionen, att göra en `Rentable` till representationen av en utgåva, och en `Copy`till en faktiskt kopia av en sådan utgåva, lade till mkt komplexitet till exempel. Ville från början göra en klass som representerade olika Rentable-typer, så att man i applikationen skulle om man ville lägga till eller ta bort andra typer av uthyrbar media, men det var inte med i specifiktationen så jag stoppade migsjälv. Det hade väl inte förenklat utveckligen i längden kanske heller, Kenneth från ringa om han vill börja med LaserDisc.
 
 ### För VG krävs utöver samtliga G-krav också följande:
 
@@ -71,6 +71,7 @@ Menu-erna skapas på ett sätt som gör det lätt att lägga till alternativ, om
 Regler som böter, rabatter och priser är alldeles för inbakta i koden, som magiska siffor.
 Det skrivs ut en oregelbunden mängd radbrytningar i menu-systemet.
 EFCore är jag inte så bekant med och bara i slutet började jag förstå mig vad en Queryable är.
+Det är svårt att testa funktionaliteten som har med datum att göra.
 
 ---
 

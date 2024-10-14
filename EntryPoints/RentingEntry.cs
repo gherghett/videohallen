@@ -34,10 +34,7 @@ public class RentingEntry
         {
             var customer = _customerEntry.ChooseCustomer();
 
-            // if (customer is null)
-            //     return;
-
-            HashSet<Copy> copies = new(); //we dont want to rent the same two times at once
+            HashSet<Copy> copies = new(); //we dont want to rent the same copy two times at once
             MenuBuilder.CreateMenu("Add items to be rented")
                 .OnEnter(PrintAddedCopies)
                 .AddScreen("Add copy", () =>
@@ -58,7 +55,7 @@ public class RentingEntry
             {
                 List<int> rentinglengthOptions = [1, 2, 3];
                 if (copy.Rentable is RentConsole)
-                    rentinglengthOptions.Add(7);
+                    rentinglengthOptions.Add(7); // Här gömmer sig lite business logic i fel lager
 
                 rentTimes.Add(Chooser.ChooseAlternative<int>($"How long is rent on {copy.Rentable.Name()}?",
                      rentinglengthOptions.Select(n => (n.ToString(), n)).ToArray()));
@@ -71,7 +68,6 @@ public class RentingEntry
             );
 
             Console.WriteLine(RentalReceiptString(rental));
-
         }
         catch (VideoException ex)
         {

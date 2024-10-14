@@ -173,6 +173,6 @@ public static class ErrorHandler
                 throw ex; //We only want to catch our own exceptions here
         }
 
-    }
+    } //TODO general notfound exception
 
 }
