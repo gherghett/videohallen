@@ -7,40 +7,8 @@ using VideoHallen.Exceptions;
 namespace VideoHallen.Services;
 public partial class RentingService
 {
-    private decimal CalculateTotalPrice(List<RentedCopy> rentedCopys, Customer customer)
-    {
-        decimal price = rentedCopys.Sum(rc => rc.Price);
-        if(IsMoreThanAYearAgo(customer.JoinDate))
-        {
-            price *= 0.9m;
-        }
-        return price;
-    }
-
-    decimal CalculatePrice(Rentable rentable, int days)
-    {
-        if( rentable is RentConsole)
-        {
-            if (days == 7)
-            {
-                return 349m;
-            }
-            else 
-            {
-                return 99m * days;
-            }
-        }
-        else
-        {
-            return  29m * days;
-        }
-    }
-
     private int DateDifference(DateOnly date1, DateOnly date2) =>
         (date1.ToDateTime(TimeOnly.MinValue) - date2.ToDateTime(TimeOnly.MinValue)).Days;
-
-    public static bool IsMoreThanAYearAgo(DateOnly date) => 
-        date < DateOnly.FromDateTime(DateTime.Now.AddYears(-1));
 
     public bool IsCompleted(Rental rental)
     {

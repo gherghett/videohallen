@@ -2,15 +2,24 @@ using Microsoft.EntityFrameworkCore;
 using VideoHallen.Models;
 using VideoHallen.Exceptions;
 // using VideoHallen;
+using VideoHallen.Services.Pricing;
+
 
 namespace VideoHallen.Services;
 public partial class RentingService
 {
     private readonly VideoHallDbContext _dbContext;
+    private readonly IPricingStrategy _pricingStrategy;
+    private readonly ITotalPriceStrategy _totalPriceStrategy;
     //private readonly InventoryService _inventoryService;
-    public RentingService(VideoHallDbContext context)
+    public RentingService(VideoHallDbContext context,
+        IPricingStrategy pricingStrategy,
+        ITotalPriceStrategy totalPriceStrategy
+    )
     {
         _dbContext = context;
+        _pricingStrategy = pricingStrategy;
+        _totalPriceStrategy = totalPriceStrategy;
         //_inventoryService = inventoryService;
     }
 
@@ -54,14 +63,17 @@ public partial class RentingService
                 {
                     Copy = c,
                     DueByDate = DateOnly.FromDateTime(DateTime.Now).AddDays(t),
-                    Price = CalculatePrice(GetRentableOfCopy(c.Id), t)
+                    //Price = CalculatePrice(GetRentableOfCopy(c.Id), t)
                 }).ToList();
         rental.RentedCopys = rentedCopys;
 
-        rental.Price = CalculateTotalPrice(rentedCopys, customer);
+        _dbContext.Add(rental); 
 
-        _dbContext.Add(rental);
-        // _dbContext.SaveChanges();
+        rentedCopys.ForEach(rc => rc.Price = _pricingStrategy.CalculatePrice(rc));
+
+        rental.Price = _totalPriceStrategy.CalculateTotalPrice(rental);
+
+        _dbContext.SaveChanges();
 
         // Set a redundant flag, to make searching easier
         copies.ForEach(c => c.Out = true);

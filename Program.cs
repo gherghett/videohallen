@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using InputHandler;
 using VideoHallen.Services;
+using VideoHallen.Services.Pricing;
 using VideoHallen.EntryPoints;
 using VideoHallen;
 using VideoHallen.Models;
@@ -49,6 +50,14 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
     .AddQuit("Quit");
 
 menu.Enter();
+// var rs = serviceProvider.GetService<RentingService>();
+// var ins = serviceProvider.GetService<InventoryService>();
+// List<int> copies = [
+//     ins.GetAvailableCopy(1).Id,
+//     ins.GetAvailableCopy(3).Id,
+//     ins.GetAvailableCopy(4).Id,
+// ];
+// rs.CreateRental(6, copies, [3,3,3]);
 
 static ServiceProvider ConfigureServices()
 {
@@ -58,6 +67,7 @@ static ServiceProvider ConfigureServices()
         .SetBasePath(Directory.GetCurrentDirectory())
         .AddJsonFile("appsettings.json")
         .Build();
+
 
     services.AddSingleton<IConfiguration>(config);
 
@@ -72,6 +82,24 @@ static ServiceProvider ConfigureServices()
     services.AddScoped<InventoryEntry>();
     services.AddScoped<RentingEntry>();
 
+    var simplePricing = new SimplePricingStrategy(
+            moviePerDay: decimal.Parse(config["Prices:MoviePerDay"]!),
+            gamePerDay: decimal.Parse(config["Prices:GamePerDay"]!),
+            consolePerDay: decimal.Parse(config["Prices:ConsolePerDay"]!),
+            consolePerWeek: decimal.Parse(config["Prices:ConsolePerWeek"]!)
+    );
+
+    services.AddSingleton<IPricingStrategy>(sp =>
+        simplePricing
+    );
+
+    services.AddSingleton<ITotalPriceStrategy>(tft =>
+        new PercentOffForStammisStrategy(
+            baseStrategy: new ThreeForTwoMoviesTotalPriceStrategy(simplePricing),
+            percentOff: 10
+        )
+    );
+    
     return services.BuildServiceProvider();
 }
 

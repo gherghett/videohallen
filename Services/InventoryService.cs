@@ -151,6 +151,10 @@ public class InventoryService
         
         return availableCopy;
     }
+    public Copy GetAvailableCopy(int rId)
+    {
+        return GetAvailableCopy(_dbContext.Find<Rentable>(rId)!);
+    }
     public Rentable GetRentableOfCopy(int copyId) 
     {
         var rentable = _dbContext.Rentables.Where(r => r.Copies.Any( c => c.Id == copyId)).SingleOrDefault();
