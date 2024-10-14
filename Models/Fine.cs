@@ -1,12 +1,12 @@
 namespace VideoHallen.Models;
-public class Fine
+public class Fine : Entity
 {
-    public int Id { get; set; }
-    public int ReturnId { get; set; }
-    public Return Return { get; set; } = null!;
-    public int CopyId { get; set; }
-    public Copy Copy { get; set; } = null!;
+    public string Reason { get; set; } = null!;
+    public int RentedCopyId { get; set; }
+    public RentedCopy RentedCopy { get; set; } = null!;
     public int CustomerId { get; set; } 
     public Customer Customer { get; set; } = null!;
     public decimal Amount {get; set;} 
+    public bool Paid {get; set;} = false;
+    // public DateTime timeStamp {get; set;} 
 }

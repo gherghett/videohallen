@@ -1,9 +1,8 @@
 namespace VideoHallen.Models;
 
-public abstract class Rentable
+public abstract class Rentable : Entity
 {
     public abstract string Name();
-    public int Id { get; set; }
     public List<Copy> Copies { get; set; } = null!;
 
     public override string ToString()

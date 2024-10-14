@@ -12,7 +12,8 @@ public class VideoHallDbContext : DbContext
     public DbSet<RentConsole> RentConsoles { get; set;}
     public DbSet<Copy> Copies { get; set; }
     public DbSet<Rental> Rentals { get; set; }
-    public DbSet<Return> Returns { get; set; }
+    //public DbSet<Return> Returns { get; set; }
+    public DbSet<RentedCopy> RentedCopys { get; set; }
     public DbSet<Fine> Fines {get; set;}
 
     public DbSet<GamePublisher> GamePublishers { get; set; }
@@ -56,6 +57,16 @@ public class VideoHallDbContext : DbContext
             customers.HasMany(c => c.Rentals)
                 .WithOne(r => r.Customer)
                 .HasForeignKey(r => r.CustomerId);
+            
+            // customers.Property(c => c.OutstandingFines) //funkar inte med sqlite
+            // .HasComputedColumnSql("SELECT SUM(Amount) FROM Fines WHERE CustomerId = Id");
+        });
+
+        modelBuilder.Entity<Rental>(rentals =>
+        {
+            rentals.HasMany(r => r.RentedCopys)
+                .WithOne(rentable => rentable.Rental)
+                .HasForeignKey(rentable => rentable.RentalId);
         });
 
         modelBuilder.Entity<Rentable>(rentables =>
@@ -75,35 +86,11 @@ public class VideoHallDbContext : DbContext
             .WithMany(p => p.Games);
         });
 
-        modelBuilder.Entity<Rental>(rentals =>
-        {
-            rentals.HasMany(r => r.RentedCopies)
-                .WithMany(rentable => rentable.Rentals);
-            
-            rentals.HasMany(r => r.Returns)
-                .WithOne(ret => ret.Rental)
-                .HasForeignKey(ret => ret.RentalId);
-        });
-
-        modelBuilder.Entity<Return>(returns =>
-        {
-            returns.HasMany(r => r.ReturnedCopies)
-                .WithMany(rentable => rentable.Returns);
-        });
-
         modelBuilder.Entity<Fine>()
-            .HasOne(f => f.Return)
-            .WithMany()
-            .HasForeignKey(f => f.ReturnId);
-
-        modelBuilder.Entity<Fine>()
-            .HasOne(f => f.Customer)
-            .WithMany()
-            .HasForeignKey(f => f.CustomerId);
+            .HasOne(f => f.Customer);
         
         modelBuilder.Entity<Fine>()
-            .HasOne(f => f.Copy)
-            .WithMany()
-            .HasForeignKey(f => f.CopyId);
+            .HasOne(f => f.RentedCopy)
+            .WithMany(re => re.Fines);
     }
 }

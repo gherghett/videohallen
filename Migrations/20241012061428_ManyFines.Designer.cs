@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoHallen;
 
@@ -10,9 +11,11 @@ using VideoHallen;
 namespace videohallen_gherghett.Migrations
 {
     [DbContext(typeof(VideoHallDbContext))]
-    partial class VideoHallDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241012061428_ManyFines")]
+    partial class ManyFines
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -62,9 +65,6 @@ namespace videohallen_gherghett.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("JoinDate")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()

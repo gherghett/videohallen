@@ -47,7 +47,7 @@ public class RentingEntry
                 .AddQuit("Continue")
                 .Enter();
 
-            void PrintAddedCopies() => 
+            void PrintAddedCopies() =>
                 Console.WriteLine(
                     copies.Count > 0
                         ? "Copies added so far: " + string.Join("\n", copies)
@@ -113,19 +113,39 @@ public class RentingEntry
     {
         try
         {
+            // menu for choosin what Rental to return copies from
             var rental = ChooseRental();
-            var copiesToReturn = rental.RentedCopies.Where(c => !_rentingService.IsReturned(rental, c));
-            var returnedCopies = rental.RentedCopies.Where(c => _rentingService.IsReturned(rental, c));
 
+            // MEnu to choose what copies in the rental to return
+            var copiesToReturn = rental.RentedCopys.Where(rc => !_rentingService.IsReturned(rc));
+            var returnedCopies = rental.RentedCopys.Where(rc => _rentingService.IsReturned(rc));
             var choiceOfReturn = new List<int>();
             if (copiesToReturn.Any())
             {
                 choiceOfReturn =
                 Chooser.ChooseMultiple<int>("What do you want to return?",
-                    copiesToReturn.Select(c => (c.ToString(), c.Id)).ToArray());
+                    copiesToReturn.Select(rc => (_inventoryService.GetCopy(rc.CopyId).ToString(), rc.CopyId)).ToArray());
             }
-            var returnResult = _rentingService.CreateReturn(rental.Id, choiceOfReturn);
-            Console.WriteLine("you returned: \n " + RentalReceiptString(returnResult.Rental));
+
+            var returnResult = _rentingService.MakeReturn(rental.Id, choiceOfReturn);
+
+            // Mark any damaged or destroyed 
+            var options = returnResult.Select(rc => (rc.Copy.ToString(), rc)).ToArray();
+            var damaged = Chooser.ChooseMultiple<RentedCopy>("Was anything damaged (not destroyed)?", options);
+            var destroyed = Chooser.ChooseMultiple<RentedCopy>("Was anything Destroyed?", options);
+            damaged.ForEach(d => _inventoryService.Damaged(d));
+            destroyed.ForEach(d => _inventoryService.Destroyed(d));
+
+            // show fines for customer
+            var fines = _customerService.GetFinesForCustomer(rental.CustomerId);
+            if (fines.Count > 0)
+            {
+                Console.WriteLine("Added fines:");
+                foreach (var fine in fines.Where(f => returnResult.Select(r => r.Id).Contains(f.RentedCopyId)))
+                {
+                    Console.WriteLine($"id: {fine.Id}, {fine.Amount} for {fine.Reason} concerning RentedCopy: {fine.RentedCopyId},");
+                }
+            }
         }
         catch (VideoException ex)
         {
@@ -133,6 +153,7 @@ public class RentingEntry
         }
 
     }
+
 
     private Rental ChooseRental()
     {
@@ -152,7 +173,7 @@ public class RentingEntry
         // No customer 
         if (rentals.Count < 1)
         {
-            throw new VideoArgumentException("There are no search result to pick from, first do a search, exiting.");
+            throw new VideoArgumentException("There are no rentals to choose from");
         }
 
         return Chooser.ChooseAlternative<Rental>("Choose rental", rentals.Select(r => (r.ToString(), r)).ToArray());
@@ -167,15 +188,15 @@ public class RentingEntry
         var sb = new StringBuilder("-------------------\n", 20000);
         sb.AppendLine(loadedRental.ToStringLong() + "\n");
         sb.AppendLine("Copies: ");
-        int index = 0;
-        foreach (var copy in loadedRental.RentedCopies)
+        foreach (var rentedCopy in loadedRental.RentedCopys)
         {
-            sb.AppendLine("\t" + copy + $" returned: {_rentingService.IsReturned(rental, copy)}");
-            sb.AppendLine("\treturn by: " + loadedRental.RentalTimes[index]);
-            sb.AppendLine("\tPrice: " + loadedRental.RentalPrices[index++]);
+            sb.AppendLine("-\tRental: (" + _inventoryService.GetRentableOfCopy(rentedCopy.CopyId) + ")");
+            sb.AppendLine($"\tCopy id: {rentedCopy.CopyId} returned: {_rentingService.IsReturned(rentedCopy)}");
+            sb.AppendLine("\treturn by: " + rentedCopy.DueByDate);
+            sb.AppendLine("\tPrice: " + rentedCopy.Price);
         }
         sb.AppendLine("-------------------");
-        sb.AppendLine("Total Price: "+loadedRental.RentalPrices.Sum());
+        sb.AppendLine("Total Price: " + loadedRental.Price);
 
         return sb.ToString();
     }

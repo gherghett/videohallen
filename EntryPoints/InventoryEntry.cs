@@ -3,6 +3,9 @@ using VideoHallen.Models;
 using VideoHallen.Services;
 using InputHandler;
 using VideoHallen.Exceptions;
+using System.Linq;
+using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace VideoHallen.EntryPoints;
 public class InventoryEntry
@@ -11,7 +14,7 @@ public class InventoryEntry
     private CustomerService _customerService;
     private InventoryService _inventoryService;
 
-    public InventoryEntry(RentingService rentingService, 
+    public InventoryEntry(RentingService rentingService,
         CustomerService customerService,
         InventoryService inventoryService)
     {
@@ -19,49 +22,15 @@ public class InventoryEntry
         _customerService = customerService;
         _inventoryService = inventoryService;
     }
-        
-    public void ViewAllInventory()
+
+    public void ViewInventory(
+        RentableType types = RentableType.All,
+        RentableFlag flags = RentableFlag.All)
     {
         try
         {
-            var allInventory = _inventoryService.GetAllInventory();
-            Console.WriteLine(string.Join("\n", allInventory.Select(i => i.ToString() +"available copies: "+_inventoryService.GetAvailability(i))));
-        }
-        catch (VideoException ex)
-        {
-            ErrorHandler.HandleException(ex);
-        }
-    }
-    public void ViewAllMovies()
-    {
-        try
-        {
-            var allMovies = _inventoryService.GetAllMovies();
-            Console.WriteLine(string.Join("\n", allMovies));
-        }
-        catch (VideoException ex)
-        {
-            ErrorHandler.HandleException(ex);
-        }
-    }
-    public void ViewAllGames()
-    {
-        try
-        {
-            var allGames = _inventoryService.GetAllGames();
-            Console.WriteLine(string.Join("\n", allGames));
-        }
-        catch (VideoException ex)
-        {
-            ErrorHandler.HandleException(ex);
-        }
-    }
-    public void ViewAllConsoles()
-    {
-        try
-        {
-            var allConsoles = _inventoryService.GetAllConsoles();
-            Console.WriteLine(string.Join("\n", allConsoles));
+            var inventory = _inventoryService.GetRentables(types, flags);
+            PrintRentables(inventory);
         }
         catch (VideoException ex)
         {
@@ -107,17 +76,18 @@ public class InventoryEntry
     public void AddGame()
     {
         var publishers = _inventoryService.GetAllGamePublishers();
-        var game = _inventoryService.AddGame(
-            UserGet.GetString("Input Title"),
-            UserGet.GetDateOnly("Release Date"),
-            Chooser.ChooseAlternative<GamePublisher>("Choose Publisher",
-                publishers.Select(p => (p.Name, p)).ToArray()
-            )
-        );
         int copies = UserGet.GetInt("How many copies?");
-        _inventoryService.AddCopies(game, copies);
+        var game = _inventoryService.AddGame(new Game
+            {
+                Title = UserGet.GetString("Enter title"),
+                ReleaseDate = UserGet.GetDateOnly("Enter release date"),
+                Publisher = Chooser.ChooseAlternative("Choose publisher", publishers.Select(p => p.ToString()).ToList(), publishers)
+            },
+            copies
+        );
+
         Console.WriteLine(game);
-        Console.WriteLine(copies+" copies added.");
+        Console.WriteLine(copies + " copies added.");
     }
     public void AddGamePublisher()
     {
@@ -132,42 +102,82 @@ public class InventoryEntry
     }
     public void AddConsole()
     {
-        var rentConsole = _inventoryService.AddRentConsole(UserGet.GetString("Model Name"));
-        int copies = UserGet.GetInt("How many copies?");
-        _inventoryService.AddCopies(rentConsole, copies);
+        try
+        {
+            var rentConsole = _inventoryService.AddRentConsole(
+                UserGet.GetString("Model Name"), 
+                UserGet.GetInt("How many copies?")
+            );
+        }
+        catch (VideoException ex)
+        {
+            ErrorHandler.HandleException(ex);
+        }
+    }
+
+    public void Search()
+    {
+        try
+        {
+            //MAke user choose what to search for
+            var names = Enum.GetNames(typeof(RentableFlag)).ToList();
+            var flags = Enum.GetValues<RentableFlag>().ToList();
+            RentableFlag searchFlags;
+            do
+            {
+                searchFlags = Chooser.ChooseMultiple<RentableFlag>("Choose Flags", names, flags).Aggregate((x, r) => x | r);
+            } while ((int)searchFlags == 0); //  no types aren't allowed
+
+            // Make user choose flags to include
+            names = Enum.GetNames(typeof(RentableType)).ToList();
+            var types = Enum.GetValues<RentableType>().ToList();
+            RentableType searchTypes;
+            do
+            {
+                searchTypes = Chooser.ChooseMultiple<RentableType>("Choose Types to search", names, types).Aggregate((x, r) => x | r);
+            } while ((int)searchTypes == 0); //no flags aren't allowed
+
+            string query = UserGet.GetString("Search");
+            PrintRentables(_inventoryService.GetRentables(searchTypes, searchFlags, query));
+        }
+        catch (VideoException ex)
+        {
+            ErrorHandler.HandleException(ex);
+        }
     }
 
     public Copy ChooseCopy() => _inventoryService.GetAvailableCopy(ChooseRentable());
+
+    private void PrintRentables<T>(List<T> rentables) where T : Rentable =>
+        Console.WriteLine(string.Join("\n", rentables.Select(i => i.ToString() + "avail cps: " + _inventoryService.GetAvailableCopies(i))));
 
     public Rentable ChooseRentable()
     {
         List<Rentable> rentables = new();
         MenuBuilder.CreateMenu("Find Rentable")
-            .OnEnter(PrintSearchResults)
+            .OnEnter(() => PrintRentables<Rentable>(rentables))
             .AddScreen("Search", () =>
             {
-                rentables = _inventoryService.SearchAllInventory(UserGet.GetString("What to find in inventory"));
+                rentables = _inventoryService.GetRentables(search: UserGet.GetString("What to find in inventory"));
             })
             .AddQuit("Pick from results")
-            .AddQuit("Pick from all",  () =>
+            .AddQuit("Pick from all available", () =>
             {
-                rentables = _inventoryService.GetAllInventory();
-            }) 
+                rentables = _inventoryService.GetRentables(RentableType.All, RentableFlag.In);
+            })
             .Enter();
-
-        void PrintSearchResults()
-        {
-            if (rentables.Count > 0)
-                Console.WriteLine(string.Join("\n", rentables));
-        }
 
         // No customer 
         if (rentables.Count < 1)
-        { 
+        {
             throw new VideoArgumentException("There are no search result to pick from, first do a search, exiting.");
         }
 
-        return Chooser.ChooseAlternative<Rentable>("Pick rentable from results", rentables.Select(r => (r.ToString(), r)).ToArray());
+        return Chooser.ChooseAlternative<Rentable>(
+            "Pick rentable from results", 
+            rentables.Select(r => 
+                (r.ToString()+"avail: "+_inventoryService.GetAvailableCopies(r), r)).ToArray()
+        );
     }
 
 }

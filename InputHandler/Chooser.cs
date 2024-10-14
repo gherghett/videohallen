@@ -136,4 +136,14 @@ static class Chooser
             Console.SetCursorPosition(0, Console.CursorTop - linesToRedraw);
         }
     }
+
+    //TODO refactor class to use easier argument configuration
+    public static List<T> ChooseMultiple<T>(string message, List<string> names, List<T> values) =>
+        ChooseMultiple<T>(message, OptionsBuilder<T>(names, values));
+    
+    public static T ChooseAlternative<T>(string message, List<string> names, List<T> values) =>
+        ChooseAlternative<T>(message, OptionsBuilder<T>(names, values));
+
+    static private (string, T)[] OptionsBuilder<T>(List<string> names, List<T> values) => 
+        names.Zip(values, (string n, T v) => (n, v)).ToArray();
 }

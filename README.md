@@ -46,6 +46,7 @@ Gävles bästa videobutik
 - [ ] Du använder dig av objektorientering i ditt system.
 - [ ] Du har besvarat följande två frågor (Svara på dem här i Readme-filen, direkt under frågan): 
 * Hur tycker du att du lyckats med uppgiften?
+
 * Vad var svårast?
 
 ### För VG krävs utöver samtliga G-krav också följande:
@@ -69,14 +70,14 @@ Gävles bästa videobutik
     * Film: Id, Title, Genre, Releasedate
     * Tv-spel: Id, Title, ReleaseDate samt Publisher
     * Konsol: Id, Model
-- [ ] Söka bland hyrbara saker utifrån en söksträng (ex titel)
+- [x] Söka bland hyrbara saker utifrån en söksträng (ex titel)
 - [x] Låna ut saker till en medlem
-- [ ] Återlämningsdatum skrivs ut när något lånas
-- [ ] Slutgiltigt pris skrivs ut vid utlåning
-- [ ] Lista allt som är uthyrt
-- [ ] Lista allt som är tillgängligt för uthyrning
-- [ ] Återlämna uthyrda saker
-- [ ] Markera media som skadad/saknad vid återlämning
+- [x] Återlämningsdatum skrivs ut när något lånas
+- [x] Slutgiltigt pris skrivs ut vid utlåning
+- [x] Lista allt som är uthyrt
+- [x] Lista allt som är tillgängligt för uthyrning
+- [x] Återlämna uthyrda saker
+- [x] Markera media som skadad/saknad vid återlämning
 - [x] Skriva ut information om media eller utlån med hjälp av en egen override av ToString()-metoden
 - [ ] När programmet startar ska minst 5 media av olika typer finnas i biblioteket, samt två medlemmar, så att det snabbt går att testa.
 - [x] Programmet skall hantera felaktig inmatning så att det inte kan krascha på grund av användarfel
@@ -86,14 +87,14 @@ Gävles bästa videobutik
 ## Regler
 
 - [x] Det skall inte gå att hyra något som redan är uthyrt
-- [ ] Priset för utlåning är 29:- per dygn för filmer och spel, 99:- för konsoler.
-- [ ] Uthyrningar har en max utlåningstid på tre dygn för film och spel.
-- [ ] Konsoler kan också hyras veckovis, och kostar då 349:-
-- [ ] Om återlämningen är försenat skall en bötesavgift läggas till medlemmen (10kr per dag)
-- [ ] Om uthyrd sak är skadad skall 500:- läggas till medlemmens böter
-- [ ] Om uthyrd sak har försvunnit skall 1000:- läggas till medlemmens böter
-- [ ] Lån skall inte gå att göra om medlemmen har obetalda böter
-- [ ] Stammisrabatt: Om kunden varit medlem längre än ett år skall den alltid få 10% rabatt
+- [x] Priset för utlåning är 29:- per dygn för filmer och spel, 99:- för konsoler.
+- [x] Uthyrningar har en max utlåningstid på tre dygn för film och spel.
+- [x] Konsoler kan också hyras veckovis, och kostar då 349:-
+- [x] Om återlämningen är försenat skall en bötesavgift läggas till medlemmen (10kr per dag)
+- [x] Om uthyrd sak är skadad skall 500:- läggas till medlemmens böter //just nu kan både försvunnit  och skadat läggas till
+- [x] Om uthyrd sak har försvunnit skall 1000:- läggas till medlemmens böter
+- [x] Lån skall inte gå att göra om medlemmen har obetalda böter
+- [x] Stammisrabatt: Om kunden varit medlem längre än ett år skall den alltid få 10% rabatt
 - [ ] Tre för två! Om någon hyr tre filmer så får den den tredje gratis!
 
 ---
@@ -116,3 +117,6 @@ Gävles bästa videobutik
 * **Kom ihåg, mer kod betyder inte bättre kod! Hellre eleganta lösningar än mycket extra funktionalitet utöver kravspecen!**
 
 Lycka till!
+
+[ ] inte hyra försvunna saker
+[ ] markera böter betald (så man kan hyra igen)

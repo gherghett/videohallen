@@ -5,7 +5,7 @@ using InputHandler;
 using VideoHallen.Services;
 using VideoHallen.EntryPoints;
 using VideoHallen;
-
+using VideoHallen.Models;
 
 var serviceProvider = ConfigureServices();
 
@@ -20,26 +20,22 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
         .AddScreen("View All Customers", customerEntry.ViewAllCustomers)
         .Done()
     .AddMenu("Inventory")
-        .AddScreen("View All Inventory", inventoryEntry.ViewAllInventory)
+        .AddScreen("View All Inventory", () => inventoryEntry.ViewInventory())
         .AddMenu("Movies")
-            .AddScreen("View all Movies", inventoryEntry.ViewAllMovies)
+            .AddScreen("View All Movies", () => inventoryEntry.ViewInventory(RentableType.Movie))
             .AddScreen("Add Movie", inventoryEntry.AddMovie)
             .AddScreen("Add Genre", inventoryEntry.AddGenre)
-            .AddScreen("Search Movie", [])
             .Done()
         .AddMenu("Games")
-            .AddScreen("View all Games", inventoryEntry.ViewAllGames)
+            .AddScreen("View all Games", () => inventoryEntry.ViewInventory(RentableType.Game))
             .AddScreen("Add Game", inventoryEntry.AddGame)
             .AddScreen("Add Publisher", inventoryEntry.AddGamePublisher)
-            .AddScreen("Search Games", [])
             .Done()
         .AddMenu("Console")
-            .AddScreen("View all Consoles", inventoryEntry.ViewAllConsoles)
+            .AddScreen("View all Consoles", () => inventoryEntry.ViewInventory(RentableType.RentConsole))
             .AddScreen("Add Console", inventoryEntry.AddConsole)
-            .AddScreen("Search Console", [])
             .Done()
-        .AddScreen("Search Item", [])
-        .AddScreen("Add Item", [])
+        .AddScreen("Search Inventory", inventoryEntry.Search)
         .Done()
     .AddMenu("Rentals")
         .AddScreen("View all rentals", rentingEntry.ViewAllRentals)
@@ -49,6 +45,7 @@ var menu = MenuBuilder.CreateMenu("Main Menu")
         .Done()
     .AddQuit("Quit");
 
+// DummyData.AddTestingData(serviceProvider);
 menu.Enter();
 
 static ServiceProvider ConfigureServices()

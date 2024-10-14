@@ -119,6 +119,17 @@ public class RentalNotFoundException : VideoException
         RentalId = id;
     }
 }
+public class RuleBreakException : VideoException
+{
+    public RuleBreakException(string message) : base(message)
+    {
+    }
+
+    public RuleBreakException(string message, Exception innerException) 
+        : base(message, innerException)
+    {
+    }
+}
 
 public static class ErrorHandler
 {
@@ -145,8 +156,10 @@ public static class ErrorHandler
                 break;
             // case CustomerHasOutstandingFeesException custRuleEx:
             //     Console.WriteLine($"Database error: {custRuleEx.Message}");
-            //     // Add specific handling for SqlException
             //     break;
+            case RuleBreakException ruleEx:
+                Console.WriteLine(ruleEx.Message);
+                break;
             case VideoException vhEx:
                 Console.WriteLine(vhEx.Message);
                 break;

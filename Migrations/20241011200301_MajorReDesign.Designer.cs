@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VideoHallen;
 
@@ -10,9 +11,11 @@ using VideoHallen;
 namespace videohallen_gherghett.Migrations
 {
     [DbContext(typeof(VideoHallDbContext))]
-    partial class VideoHallDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241011200301_MajorReDesign")]
+    partial class MajorReDesign
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -63,9 +66,6 @@ namespace videohallen_gherghett.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly>("JoinDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -91,13 +91,6 @@ namespace videohallen_gherghett.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("Paid")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("RentedCopyId")
                         .HasColumnType("INTEGER");
 
@@ -105,7 +98,8 @@ namespace videohallen_gherghett.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("RentedCopyId");
+                    b.HasIndex("RentedCopyId")
+                        .IsUnique();
 
                     b.ToTable("Fines");
                 });
@@ -303,8 +297,8 @@ namespace videohallen_gherghett.Migrations
                         .IsRequired();
 
                     b.HasOne("VideoHallen.Models.RentedCopy", "RentedCopy")
-                        .WithMany("Fines")
-                        .HasForeignKey("RentedCopyId")
+                        .WithOne("Fine")
+                        .HasForeignKey("VideoHallen.Models.Fine", "RentedCopyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -381,7 +375,7 @@ namespace videohallen_gherghett.Migrations
 
             modelBuilder.Entity("VideoHallen.Models.RentedCopy", b =>
                 {
-                    b.Navigation("Fines");
+                    b.Navigation("Fine");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VideoHallen;
+using VideoHallen.Exceptions;
 using VideoHallen.Models;
 
 namespace VideoHallen.Services;
@@ -13,7 +14,11 @@ public class CustomerService
 
     public Customer AddCustomer(string name, string telephone)
     {
-        Customer newCustomer = new Customer{Name = name, Telephone = telephone};
+        Customer newCustomer = new Customer{
+            Name = name,
+            Telephone = telephone, 
+            JoinDate = DateOnly.FromDateTime(DateTime.Now)
+        };
         _dbContext.Add(newCustomer);
         _dbContext.SaveChanges();
         return newCustomer;
@@ -31,4 +36,8 @@ public class CustomerService
             .ToList();
     }
 
+    public List<Fine> GetFinesForCustomer(int customerId)
+    {
+        return _dbContext.Fines.Where(f => f.CustomerId == customerId).ToList();
+    }
 }

@@ -7,23 +7,14 @@ using VideoHallen.Exceptions;
 namespace VideoHallen.Services;
 public partial class RentingService
 {
-    // private readonly VideoHallDbContext _dbContext;
-    // // public RentingService(VideoHallDbContext context)
-    // // {
-    // //     _dbContext = context;
-    // // }
-
-    private List<decimal> CalculatePrices(Rental rental)
+    private decimal CalculateTotalPrice(List<RentedCopy> rentedCopys, Customer customer)
     {
-        var prices = new List<decimal>();
-        var startTime = DateOnly.FromDateTime(rental.TimeStamp);
-        foreach(var copy in GetExpireDates(rental))
+        decimal price = rentedCopys.Sum(rc => rc.Price);
+        if(IsMoreThanAYearAgo(customer.JoinDate))
         {
-            int days = DateDifference(copy.Date, startTime);
-            
-            prices.Add(CalculatePrice(copy.CopyItem.Rentable, days));
+            price *= 0.9m;
         }
-        return prices;
+        return price;
     }
 
     decimal CalculatePrice(Rentable rentable, int days)
@@ -45,51 +36,69 @@ public partial class RentingService
         }
     }
 
-    //service
-    private List<( Copy CopyItem, DateOnly Date ) > GetExpireDates(Rental rental)
-    {
-        // var loadedRental = _dbContext.Rentals
-        //     .Include(r => r.RentedCopies)
-        //         .ThenInclude(c => c.Rentable)
-        //     .Where(r => r.Id == rental.Id)
-        //     .SingleOrDefault();
-        // if (loadedRental == null)
-        //      throw new RentalNotFoundException("Could not load Rental");
+    private int DateDifference(DateOnly date1, DateOnly date2) =>
+        (date1.ToDateTime(TimeOnly.MinValue) - date2.ToDateTime(TimeOnly.MinValue)).Days;
 
-        return rental.RentedCopies.Zip(rental.RentalTimes, (x, y) => (CopyItem: x ,Date: y)).ToList();
-    }
-
-    private int DateDifference(DateOnly date1, DateOnly date2)
-    {
-        return (date1.ToDateTime(TimeOnly.MinValue) - date2.ToDateTime(TimeOnly.MinValue)).Days;
-    }
+    public static bool IsMoreThanAYearAgo(DateOnly date) => 
+        date < DateOnly.FromDateTime(DateTime.Now.AddYears(-1));
 
     public bool IsCompleted(Rental rental)
     {
         var loadedRental = _dbContext.Rentals
-            .Include(r => r.RentedCopies)
-            .Where(r => r.Id == rental.Id)
-            .SingleOrDefault();
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
+            .SingleOrDefault(r => r.Id == rental.Id);
 
         if (loadedRental == null)
             throw new RentalNotFoundException("Could not access rental.");
 
-        return loadedRental.RentedCopies.All(c => IsReturned(loadedRental, c));
+        return loadedRental.RentedCopys.All(c => IsReturned(loadedRental, c.Copy));
     }
 
     public bool IsReturned(Rental rental, Copy copy)
     {
         var loadedRental = _dbContext.Rentals
-            .Include(r => r.Returns)
-                .ThenInclude(r => r.ReturnedCopies)
-            .FirstOrDefault(r => r.Id == rental.Id);
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
+            .SingleOrDefault(r => r.Id == rental.Id);
         if(loadedRental is null)
             throw new RentalNotFoundException("Rental requested was not found in database", rental.Id);
         
         return loadedRental
-                .Returns
-                .Any(r => r.ReturnedCopies.Any( c => c.Id == copy.Id));
+                .RentedCopys
+                .Any(r => r.CopyId == copy.Id && r.ReturnDate != null);
+    }
+
+    public bool IsReturned(RentedCopy rentedCopy)
+    {
+        // var loadedRentedCopy = _dbContext.RentedCopys
+        //     .Include(r => r.Copy)
+        //     .SingleOrDefault(r => r.Id == rentedCopy.Id);
+            
+        // if(loadedRentedCopy is null)
+        //     throw new RentalNotFoundException("RentalCopy requested was not found in database", rentedCopy.Id);
+        
+        return rentedCopy.ReturnDate != null;
     }
 
 
+    private decimal CalculateFine(int daysLate)
+    {
+        return 10m * daysLate; 
+    }
+
+    public void CreateFine(RentedCopy rc, decimal amount, string reason)
+    {
+        var rental = GetRental(rc.RentalId);
+        if(rental is null)
+            throw new RentalNotFoundException("Rental could not be loaded from db");
+
+        var fine = new Fine {
+            Amount = amount,
+            Customer = rental.Customer,
+            RentedCopy = rc,
+            Reason = reason
+        };
+        _dbContext.Add(fine);
+    }
 }

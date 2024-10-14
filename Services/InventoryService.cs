@@ -6,10 +6,12 @@ using VideoHallen.Exceptions;
 namespace VideoHallen.Services;
 public class InventoryService 
 {
+    private readonly RentingService _rentingService;
     private readonly VideoHallDbContext _dbContext;
-    public InventoryService(VideoHallDbContext context)
+    public InventoryService(VideoHallDbContext context, RentingService rentingService)
     {
         _dbContext = context;
+        _rentingService = rentingService;
     }
 
     public Movie AddMovie(Movie movie, int copies = 1)
@@ -41,17 +43,12 @@ public class InventoryService
     }
 
     // Game methods
-    public Game AddGame(string title, DateOnly release, GamePublisher publisher)
+    public Game AddGame( Game game, int copies)
     {
-        Game newGame = new Game
-        {
-            Title = title,
-            ReleaseDate = release,
-            Publisher = publisher
-        };
-        _dbContext.Add(newGame);
+        _dbContext.Add(game);
         _dbContext.SaveChanges();
-        return newGame;
+        AddCopies(game, copies);
+        return game;
     }
 
     public GamePublisher AddPublisher(string name)
@@ -67,10 +64,11 @@ public class InventoryService
     }
 
     // RentConsole methods
-    public RentConsole AddRentConsole(string model)
+    public RentConsole AddRentConsole(string model, int copies)
     {
         RentConsole newConsole = new RentConsole { Model = model };
         _dbContext.Add(newConsole);
+        AddCopies(newConsole, copies);
         _dbContext.SaveChanges();
         return newConsole;
     }
@@ -88,55 +86,39 @@ public class InventoryService
         return copies;
     }
 
-    public List<Rentable> GetAllInventory()
+    public List<Rentable> GetRentables( 
+        RentableType types = RentableType.All,
+        RentableFlag flags = RentableFlag.All,
+        string search = "")
     {
-        return _dbContext.Rentables.Include(r => r.Copies).ToList();
+        //return _dbContext.Rentables.Where(r => r is Movie).ToList();
+        IQueryable<Rentable> query = _dbContext.Rentables.Include(r => r.Copies);
+
+        query = query.Where(r =>
+            (types.HasFlag(RentableType.Movie) && r is Movie) ||
+            (types.HasFlag(RentableType.Game) && r is Game) ||
+            (types.HasFlag(RentableType.RentConsole) && r is RentConsole)
+        );
+
+        List<Rentable> results = new();
+
+        if (flags.HasFlag(RentableFlag.In))
+            results.AddRange(query.Where(r => r.Copies.Any(c => !c.Out)));
+        if (flags.HasFlag(RentableFlag.Out))
+            results.AddRange(query.Where(r => r.Copies.Any(c => c.Out)));
+        if (flags.HasFlag(RentableFlag.Damaged))
+            results.AddRange(query.Where(r => r.Copies.Any(c => c.Damaged)));
+        if (flags.HasFlag(RentableFlag.Destroyed))
+            results.AddRange(query.Where(r => r.Copies.Any(c => c.Unusable)));
+
+        //yuck
+        return results.Where(r => r.Name().Contains(search, StringComparison.OrdinalIgnoreCase)).Distinct().ToList();
     }
 
-    internal List<Game> GetAllGames()
-    {
-        return _dbContext.Games
-            .Include(g => g.Copies)
-                .ThenInclude(c => c.Rentals)
-                    .ThenInclude(r => r.Returns)
-                        .ThenInclude(r => r.ReturnedCopies)
-            .ToList();
-    }
-
-    internal List<RentConsole> GetAllConsoles()
-    {
-        return _dbContext.RentConsoles.Include(r => r.Copies).ToList();
-    }
-
-    public int GetAvailability(Rentable rentable)
+    public int GetAvailableCopies(Rentable rentable)
     {
         _dbContext.Entry(rentable).Collection(r => r.Copies).Load();
         return rentable.Copies.Count(c => !c.Out);
-    }
-
-    //Search
-    public List<Rentable> SearchAllInventory(string query)
-    {
-        var movies = SearchMovies(query);
-        var games = SearchGames(query);
-        var consoles = SearchRentConsoles(query);
-        
-        return movies.Cast<Rentable>()
-                 .Concat(games.Cast<Rentable>())
-                 .Concat(consoles.Cast<Rentable>())
-                 .ToList();
-    }
-    public List<Movie> SearchMovies(string query)
-    {
-        return _dbContext.Movies.Where(c => EF.Functions.Like(c.Title, $"%{query}%")).ToList();
-    }
-    public List<Game> SearchGames(string query)
-    {
-        return _dbContext.Games.Where(c => EF.Functions.Like(c.Title, $"%{query}%")).ToList();
-    }
-    public List<RentConsole> SearchRentConsoles(string query)
-    {
-        return _dbContext.RentConsoles.Where(c => EF.Functions.Like(c.Model, $"%{query}%")).ToList();
     }
     
     public List<Copy> GetCopiesOfRentable(Rentable rentable)
@@ -153,6 +135,9 @@ public class InventoryService
             .Copies
             .ToList();
     }
+    public Copy GetCopy(int copyId) =>
+         _dbContext.Copies.Find(copyId)
+            ?? throw new VideoArgumentException("Cant find copy!");
     public Copy GetAvailableCopy(Rentable rentable)
     {
         var availableCopy = GetCopiesOfRentable(rentable)
@@ -162,5 +147,26 @@ public class InventoryService
             throw new CopyNotAvailableException("There is no available copies for this rentable");
         
         return availableCopy;
+    }
+    public Rentable GetRentableOfCopy(int copyId) //TODO remove?
+    {
+        var rentable = _dbContext.Rentables.Where(r => r.Copies.Any( c => c.Id == copyId)).SingleOrDefault();
+        if (rentable is null)
+            throw new RentalNotFoundException("Could not load that rentable!!!!");
+        return rentable;
+    } 
+
+    public void Destroyed(RentedCopy rc)
+    {
+        GetCopy(rc.CopyId).Unusable = true;
+        _rentingService.CreateFine(rc, 500m, "Damage");        
+        _dbContext.SaveChanges();
+    }
+
+    public void Damaged(RentedCopy rc)
+    {
+        GetCopy(rc.CopyId).Damaged = true;
+        _rentingService.CreateFine(rc, 1000m, "Destroyed");        
+        _dbContext.SaveChanges();
     }
 }

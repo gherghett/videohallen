@@ -1,8 +1,7 @@
 namespace VideoHallen.Models;
 
-public class GamePublisher
+public class GamePublisher  : Entity
 {
-    public int Id { get; set; }
     public string Name { get; set; } = null!;
     public List<Game> Games{ get; set; } = null!;
 

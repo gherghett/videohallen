@@ -4,44 +4,62 @@ using VideoHallen.Exceptions;
 // using VideoHallen;
 
 namespace VideoHallen.Services;
- public partial class RentingService
+public partial class RentingService
 {
     private readonly VideoHallDbContext _dbContext;
+    //private readonly InventoryService _inventoryService;
     public RentingService(VideoHallDbContext context)
     {
         _dbContext = context;
+        //_inventoryService = inventoryService;
     }
 
     //Rental methods
     public Rental CreateRental(int customerId, List<int> copyIds, List<int> rentTimes)
     {
-        if(copyIds.Count < 1)
+        if (copyIds.Count < 1)
             throw new VideoArgumentException("Select atleast one copy to rent");
 
         var customer = _dbContext.Customers.Find(customerId);
-        
+
         if (customer == null)
             throw new CustomerNotFoundException("Customer not found");
-        // TODO We need to check for customer having oustanding fees here aswell
+        
+        var fines = GetUnpaidFinesForCustomer(customer);
+        if( fines.Count > 0)
+            throw new RuleBreakException("Cant make a new rental! Outstanding Fines!");
+        // There is no way to pay fine
 
         var copies = _dbContext.Copies.Include(c => c.Rentable).Where(c => copyIds.Contains(c.Id)).ToList();
 
         if (copies.Count != copyIds.Count)
-            throw new CopyNotFoundException("One or more copies not found", 
+            throw new CopyNotFoundException("One or more copies not found",
                 copyIds.Where(c => !copies.Select(co => co.Id).Contains(c)).ToList());
         if (copies.Where(c => c.Out).Any())
-            throw new CopyNotAvailableException("One or more Copies are not available for rent", 
+            throw new CopyNotAvailableException("One or more Copies are not available for rent",
                 copies.Where(c => c.Out).Select(c => c.Id).ToList());
 
         var rental = new Rental
         {
             Customer = customer,
-            RentedCopies = copies,
-            RentalTimes = rentTimes.Select(n => DateOnly.FromDateTime(DateTime.Now).AddDays(n)).ToList(),
+            //RentedCopys = 
+            //RentalTimes = rentTimes.Select(n => DateOnly.FromDateTime(DateTime.Now).AddDays(n)).ToList(),
             TimeStamp = DateTime.Now
         };
 
-        rental.RentalPrices = CalculatePrices(rental);
+        var rentedCopys = 
+        copies
+            .Zip(rentTimes, (c, t) =>
+                new RentedCopy
+                {
+                    Copy = c,
+                    DueByDate = DateOnly.FromDateTime(DateTime.Now).AddDays(t),
+                    Price = CalculatePrice(GetRentableOfCopy(c.Id), t)
+                }).ToList();
+        rental.RentedCopys = rentedCopys;
+
+        rental.Price = CalculateTotalPrice(rentedCopys, customer);
+
         _dbContext.Add(rental);
         // _dbContext.SaveChanges();
 
@@ -52,121 +70,121 @@ namespace VideoHallen.Services;
         return rental;
     }
 
-    public Return CreateReturn(int rentalId, List<int> copyIds)
+    public List<RentedCopy> MakeReturn(int rentalId, List<int> copyIds)
     {
-        var rental = _dbContext.Rentals.Find(rentalId);
+        var rental = _dbContext
+            .Rentals
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
+            .Where(r => r.Id == rentalId).SingleOrDefault();
         if (rental == null)
             throw new RentalNotFoundException("Rental not found");
 
-        if(IsCompleted(rental))
+        if (IsCompleted(rental))
         {
             rental.Complete = true;
             throw new VideoArgumentException("Rental is already fully returned");
         }
 
-        if( copyIds.Count < 1)
+        if (copyIds.Count < 1)
             throw new VideoArgumentException("You have to return something to amke a return");
 
         var copies = _dbContext.Copies.Where(c => copyIds.Contains(c.Id)).ToList();
         if (copies.Count != copyIds.Count)
             throw new CopyNotFoundException("One or more copies not found");
 
-        var newReturn = new Return
+        // var newReturn = new Return
+        // {
+        //     Rental = rental,
+        //     ReturnedCopies = copies,
+        //     TimeStamp = DateTime.Now
+        // };
+
+        var rentedCopys = new List<RentedCopy>();
+        copies.ForEach(c =>
         {
-            Rental = rental,
-            ReturnedCopies = copies,
-            TimeStamp = DateTime.Now
-        };
-
-
-        copies.ForEach(c => {
             c.Out = false;
+            var rentedCopy = rental.RentedCopys
+                .Where(r => r.CopyId == c.Id)
+                .Single();
+            rentedCopy.ReturnDate = DateTime.Now;
+            // rentedCopy.DueByDate
+            var daysLate = DateDifference(DateOnly.FromDateTime(DateTime.Now),rentedCopy.DueByDate); 
+            if( daysLate > 0)
+            {
+                var fine = new Fine
+                {
+                    Amount = CalculateFine(daysLate),
+                    CustomerId = rental.CustomerId,
+                    RentedCopy = rentedCopy,
+                    Reason = "Late fees"
+                };
+                if (rentedCopy.Fines == null)
+                {
+                    _dbContext.Entry(rentedCopy).Collection(r => r.Fines).Load();
+                }
+                if( rentedCopy == null || rentedCopy.Fines == null)
+                    throw new RentalNotFoundException("Database issue");
+                rentedCopy.Fines.Add(fine); ///loaded?
+            }
+            rentedCopys.Add(rentedCopy);
         });
 
-        _dbContext.Add(newReturn);
-
-        if(IsCompleted(rental))
+        if (IsCompleted(rental))
         {
             rental.Complete = true;
         }
 
         _dbContext.SaveChanges();
 
-        List<(Copy, decimal)> fines = GetFines(rental, copies);
-        fines.ForEach( f =>
-        {
-            if(f.Item2 > 0m)
-                CreateFine(newReturn, f.Item1, rental.CustomerId, f.Item2);
-        });
-
-        return newReturn;
-    }
-
-    private Fine CreateFine(Return returnItem, Copy copy, int customer, decimal amount)
-    {
-        var fine = new Fine{
-            Amount = amount,
-            Copy = copy,
-            CustomerId = customer,
-            Return = returnItem
-        };
-        _dbContext.Add(fine);
-        _dbContext.SaveChanges();
-        return fine;
+        return rentedCopys;
     }
 
     //Getters
-    public List<Rental> GetAllRentals() => 
+    public List<Rental> GetAllRentals() =>
         _dbContext.Rentals
             .Include(r => r.Customer)
-            .Include(r => r.RentedCopies)
-                .ThenInclude(c => c.Rentable)
-            .Include(r => r.Returns)
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
+                    .ThenInclude(c => c.Rentable)
             .ToList();
 
-    public Rental? GetRental(int id) => 
+    public Rental? GetRental(int id) =>
         _dbContext.Rentals
             .Include(r => r.Customer)
-            .Include(r => r.RentedCopies)
-                .ThenInclude(c => c.Rentable)
-            .Include(r => r.Returns)
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
+                    .ThenInclude(c => c.Rentable)
             .FirstOrDefault(r => r.Id == id);
 
-    private List<(Copy, decimal)> GetFines(Rental rental, List<Copy> copies)
+    internal List<Rental> GetRentalByCustomer(Customer customer)
     {
-        var results = new List<(Copy, decimal)>();
-        var expireDates = GetExpireDates(rental);
-        var relvantExpire = expireDates.Where(x => copies.Select(c => c.Id).Contains(x.CopyItem.Id));
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        foreach(var x in relvantExpire)
-        {
-            if(x.Date <= today)
-                results.Add((x.CopyItem, 0));
-            else
-                results.Add((x.CopyItem, DateDifference(today, x.Date) * 10));
-        }
-        return results;
-    }
-    public Return? GetReturn(int id)
-    {
-        return _dbContext.Returns
-            .Include(r => r.Rental)
-            .Include(r => r.ReturnedCopies)
-            .FirstOrDefault(r => r.Id == id);
-    }
-
-    internal List<Rental> GetRentalByCustomer(Customer? customer)
-    {
-        if(customer is null)
-            throw new VideoArgumentException("Cannot get Rentals for null customer");
+        // if (customer is null)
+        //     throw new VideoArgumentException("Cannot get Rentals for null customer");
 
         return _dbContext.Rentals
             .Include(r => r.Customer)
-            .Include(r => r.RentedCopies)
-                .ThenInclude(c => c.Rentable)
-            .Include(r => r.Returns)
+            .Include(r => r.RentedCopys)
+                .ThenInclude(rc => rc.Copy)
             .Where(r => r.CustomerId == customer.Id)
             .ToList();
     }
 
+    public List<Fine> GetUnpaidFinesForCustomer(Customer customer)
+    {
+        return _dbContext
+            .Fines
+            .Include(f => f.RentedCopy)
+                .ThenInclude(rc => rc.Copy)
+            .Where(f => f.CustomerId == customer.Id && !f.Paid ).ToList();
+        
+    }
+
+    public Rentable GetRentableOfCopy(int copyId)
+    {
+        var rentable = _dbContext.Rentables.Where(r => r.Copies.Any( c => c.Id == copyId)).SingleOrDefault();
+        if (rentable is null)
+            throw new RentalNotFoundException("Could not load that rentable....");
+        return rentable;
+    } 
 }

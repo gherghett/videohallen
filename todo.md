@@ -1,0 +1,1 @@
+[x] making new rental... only display rentals with available copies
