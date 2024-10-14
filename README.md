@@ -67,13 +67,18 @@ Att sätta stop för abstraktionen, att göra en `Rentable` till representatione
 * På vilket sätt underlättar din nuvarande struktur vidareutveckling? Ge gärna exempel om du skulle lägga till någon extra funktion.
 Menu-erna skapas på ett sätt som gör det lätt att lägga till alternativ, om man tittar på huvudmenun i Program.cs ser man direkt hur man skulle kunna lägga till en ytterligare "entry" till applikationen. `Service` klasserna har metoder som gör att ny funktionalitet kan läggas till i en `Entry`-klass. Tex metodern `GetRentables()` som kan användas för att få tillbaka en lista med `Rentable` objekt från databasen skulle kunna ändras för att tillåta uteslutning av `Rentable`s som är reserverade.
 
-* Givet mer tid, vad skulle du kunna gjort bättre i denna uppgift? 
+* Givet mer tid, vad skulle du kunna gjort bättre i denna uppgift?
+Kolla fler gånger på specifikationen i början, och ställa fler frågor.
 Regler som böter, rabatter och priser är alldeles för inbakta i koden, som magiska siffor.
 Det skrivs ut en oregelbunden mängd radbrytningar i menu-systemet.
 EFCore är jag inte så bekant med och bara i slutet började jag förstå mig vad en Queryable är.
 Det är svårt att testa funktionaliteten som har med datum att göra.
 Man kan inte se genrerna, och inga fält inkluderas i en sökning förutom titeln.
 Man kan för tillfället hyra en borttappad `Rentable`
+Vilka exceptions som kastas är inte konsekvent
+Mer använbart gränsnitt där man kan ångra beslut, 
+ändra i inventariet, Betala av böter, 
+Skriva om texten i appen till svenska.
 
 ---
 
